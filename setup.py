@@ -59,7 +59,8 @@ class RunAudit(Command):
         pass
 
     def run(self):
-        import os, sys
+        import os
+        import sys
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:
@@ -107,22 +108,21 @@ for dep in info.get('depends', []):
 requires.append('trytond >= %s.%s, < %s.%s' %
         (major_version, minor_version, major_version, minor_version + 1))
 
-setup(name='trytond_%s' % module_name,
+setup(
+    name='trytond_%s' % module_name,
     version=info.get('version', '0.0.1'),
     description=info.get('description', ''),
-    author=info.get('author', ''),
-    author_email=info.get('email', ''),
-    url=info.get('website', ''),
-    download_url="http://downloads.tryton.org/" + \
-            info.get('version', '0.0.1').rsplit('.', 1)[0] + '/',
+    author="Openlabs Technologies and Consulting (P) Ltd.",
+    url="http://openlabs.co.in",
+    download_url=
+        "https://github.com/openlabs/trytond-nereid-image-transformation",
     package_dir={'trytond.modules.%s' % module_name: '.'},
     packages=[
         'trytond.modules.%s' % module_name,
         'trytond.modules.%s.tests' % module_name,
     ],
     package_data={
-        'trytond.modules.%s' % module_name: info.get('xml', []) \
-            + ['tryton.cfg']
+        'trytond.modules.%s' % module_name: info.get('xml', []) + ['tryton.cfg']
     },
     classifiers=[
         'Development Status :: 5 - Production/Stable',

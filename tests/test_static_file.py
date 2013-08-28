@@ -95,7 +95,8 @@ class TestStaticFile(NereidTestCase):
             'localhost/home.jinja':
                 '''
                 {% set static_file = static_file_obj(static_file_id) %}
-                {{ static_file.transform_command().thumbnail(120, 120).resize(100, 100) }}
+                {{ static_file.transform_command().thumbnail(120, 120).resize(
+                    100, 100) }}
                 ''',
 
         }
@@ -115,7 +116,6 @@ class TestStaticFile(NereidTestCase):
             'folder': folder_id,
             'file_binary': file_buffer,
         })
-
 
     def test_0010_static_file_url(self):
         with Transaction().start(DB_NAME, USER, CONTEXT):
@@ -154,14 +154,12 @@ class TestStaticFile(NereidTestCase):
                 self.assertEqual(rv.status_code, 200)
 
 
-
-
 def suite():
     "Nereid test suite"
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestStaticFile)
-        )
+    )
     return test_suite
 
 
