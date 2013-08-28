@@ -132,14 +132,13 @@ setup(
         'Intended Audience :: Financial and Insurance Industry',
         'Intended Audience :: Legal Industry',
         'Intended Audience :: Manufacturing',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'License :: OSI Approved :: BSD License'
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Topic :: Office/Business',
     ],
-    license='GPL-3',
     install_requires=requires,
     zip_safe=False,
     entry_points="""
