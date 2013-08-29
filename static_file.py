@@ -35,9 +35,13 @@ class TransformationCommand(object):
     >>> c.thumbnail(128, 128)
     TransformationCommand(['thumbnail,w_128,h_128,m_n'])
     >>> c.resize(100, 100)
-    TransformationCommand(['thumbnail,w_128,h_128,m_n', 'resize,w_100,h_100,m_n'])
+    TransformationCommand(
+        ['thumbnail,w_128,h_128,m_n', 'resize,w_100,h_100,m_n']
+    )
     >>> c
-    TransformationCommand(['thumbnail,w_128,h_128,m_n', 'resize,w_100,h_100,m_n'])
+    TransformationCommand(
+        ['thumbnail,w_128,h_128,m_n', 'resize,w_100,h_100,m_n']
+    )
     >>> str(c)
     'thumbnail,w_128,h_128,m_n/resize,w_100,h_100,m_n'
     """
@@ -141,8 +145,9 @@ class StaticFileTransformationCommand(TransformationCommand):
         Constructs a URL based on the static file and the commands
         """
         return url_for(
-            'nereid.static.file.transform_static_file', active_id=int(self.static_file),
-            commands=unicode(self), extension=self.extension
+            'nereid.static.file.transform_static_file',
+            active_id=int(self.static_file), commands=unicode(self),
+            extension=self.extension,
         )
 
 

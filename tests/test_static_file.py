@@ -6,7 +6,7 @@
     Test the static file feature of nereid
 
     :copyright: (c) 2013 by Openlabs Technologies & Consulting (P) LTD
-    :license: GPLv3, see LICENSE for more details.
+    :license: BSD, see LICENSE for more details.
 """
 import new
 import unittest
@@ -52,70 +52,68 @@ class TestStaticFile(NereidTestCase):
         """
         Setup the defaults
         """
-        usd = self.currency_obj.create({
+        usd, = self.currency_obj.create([{
             'name': 'US Dollar',
             'code': 'USD',
             'symbol': '$',
-        })
-        company_id = self.company_obj.create({
-            'name': 'Openlabs',
+        }])
+        company_party, = self.party_obj.create([{'name': 'Openlabs'}])
+        company, = self.company_obj.create([{
+            'party': company_party.id,
             'currency': usd
-        })
-        guest_user = self.nereid_user_obj.create({
-            'name': 'Guest User',
+        }])
+        guest_user_party, = self.party_obj.create([{'name': 'Guest User'}])
+        guest_user, = self.nereid_user_obj.create([{
+            'party': guest_user_party.id,
             'display_name': 'Guest User',
             'email': 'guest@openlabs.co.in',
             'password': 'password',
-            'company': company_id,
-        })
-        self.registered_user_id = self.nereid_user_obj.create({
-            'name': 'Registered User',
+            'company': company.id,
+        }])
+
+        registered_user_party, = \
+            self.party_obj.create([{'name': 'Registered User'}])
+        self.registered_user, = self.nereid_user_obj.create([{
+            'party': registered_user_party.id,
             'display_name': 'Registered User',
             'email': 'email@example.com',
             'password': 'password',
-            'company': company_id,
-        })
+            'company': company.id,
+        }])
 
-        url_map_id, = self.url_map_obj.search([], limit=1)
+        url_map, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
-        self.nereid_website_obj.create({
+        self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map_id,
-            'company': company_id,
+            'url_map': url_map.id,
+            'company': company.id,
             'application_user': USER,
-            'default_language': en_us,
-            'guest_user': guest_user,
-        })
-
-    def get_template_source(self, name):
-        """
-        Return templates
-        """
-        templates = {
-            'localhost/home.jinja':
+            'default_language': en_us.id,
+            'guest_user': guest_user.id,
+        }])
+        self.templates = {
+            'home.jinja':
                 '''
                 {% set static_file = static_file_obj(static_file_id) %}
-                {{ static_file.transform_command().thumbnail(120, 120).resize(100, 100) }}
+                {{ static_file.transform_command().thumbnail(120, 120).resize(
+                    100, 100) }}
                 ''',
-
         }
-        return templates.get(name)
 
     def create_static_file(self, file_buffer):
         """
         Creates the static file for testing
         """
-        folder_id = self.static_folder_obj.create({
+        folder, = self.static_folder_obj.create([{
             'folder_name': 'test',
             'description': 'Test Folder'
-        })
+        }])
 
-        return self.static_file_obj.create({
+        return self.static_file_obj.create([{
             'name': 'test.png',
-            'folder': folder_id,
+            'folder': folder.id,
             'file_binary': file_buffer,
-        })
-
+        }])[0]
 
     def test_0010_static_file_url(self):
         with Transaction().start(DB_NAME, USER, CONTEXT):
@@ -154,14 +152,12 @@ class TestStaticFile(NereidTestCase):
                 self.assertEqual(rv.status_code, 200)
 
 
-
-
 def suite():
     "Nereid test suite"
     test_suite = unittest.TestSuite()
     test_suite.addTests(
         unittest.TestLoader().loadTestsFromTestCase(TestStaticFile)
-        )
+    )
     return test_suite
 
 
