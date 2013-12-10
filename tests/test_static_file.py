@@ -47,6 +47,7 @@ class TestStaticFile(NereidTestCase):
         self.contact_mech_obj = POOL.get('party.contact_mechanism')
         self.static_file_obj = POOL.get('nereid.static.file')
         self.static_folder_obj = POOL.get('nereid.static.folder')
+        self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
 
     def setup_defaults(self):
         """
@@ -57,18 +58,22 @@ class TestStaticFile(NereidTestCase):
             'code': 'USD',
             'symbol': '$',
         }])
-        company_party, = self.party_obj.create([{'name': 'Openlabs'}])
-        company, = self.company_obj.create([{
-            'party': company_party.id,
-            'currency': usd
+        self.party, = self.party_obj.create([{
+            'name': 'Openlabs',
         }])
-        guest_user_party, = self.party_obj.create([{'name': 'Guest User'}])
-        guest_user, = self.nereid_user_obj.create([{
-            'party': guest_user_party.id,
+        self.company, = self.company_obj.create([{
+            'party': self.party,
+            'currency': usd,
+        }])
+        self.guest_party, = self.party_obj.create([{
+            'name': 'Guest User',
+        }])
+        self.guest_user, = self.nereid_user_obj.create([{
+            'party': self.guest_party,
             'display_name': 'Guest User',
             'email': 'guest@openlabs.co.in',
             'password': 'password',
-            'company': company.id,
+            'company': self.company.id,
         }])
 
         registered_user_party, = \
@@ -78,18 +83,25 @@ class TestStaticFile(NereidTestCase):
             'display_name': 'Registered User',
             'email': 'email@example.com',
             'password': 'password',
-            'company': company.id,
+            'company': self.company.id,
         }])
 
-        url_map, = self.url_map_obj.search([], limit=1)
+        url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
+        currency, = self.currency_obj.search([('code', '=', 'USD')])
+        locale, = self.nereid_website_locale_obj.create([{
+            'code': 'en_US',
+            'language': en_us,
+            'currency': currency,
+        }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map.id,
-            'company': company.id,
+            'url_map': url_map_id,
+            'company': self.company,
             'application_user': USER,
-            'default_language': en_us.id,
-            'guest_user': guest_user.id,
+            'default_locale': locale,
+            'locales': [('add', [locale.id])],
+            'guest_user': self.guest_user,
         }])
         self.templates = {
             'home.jinja':
