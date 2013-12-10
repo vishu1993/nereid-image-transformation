@@ -13,6 +13,7 @@ import tempfile
 import Image
 from nereid.helpers import send_file
 from nereid import url_for
+from werkzeug.utils import secure_filename
 
 from trytond.pool import PoolMeta
 from trytond.transaction import Transaction
@@ -223,11 +224,10 @@ class NereidStaticFile:
 
         filename = os.path.join(
             tmp_folder,
-            '%s.%s' % (commands.replace('/', ''), extension)
+            '%s.%s' % (secure_filename(commands), extension)
         )
 
         if not os.path.exists(filename):
-            print "Creating file since one doesnt exist"
             self._transform_static_file(commands, extension, filename)
 
         rv = send_file(filename)
