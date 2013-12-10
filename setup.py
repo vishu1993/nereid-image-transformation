@@ -111,7 +111,8 @@ requires.append('trytond >= %s.%s, < %s.%s' %
 setup(
     name='trytond_%s' % module_name,
     version=info.get('version', '0.0.1'),
-    description=info.get('description', ''),
+    description='Nereid Dynamic Image Resizing and transformation module',
+    long_description=open('README.rst').read(),
     author="Openlabs Technologies and Consulting (P) Ltd.",
     url="http://openlabs.co.in",
     download_url=
@@ -132,7 +133,7 @@ setup(
         'Intended Audience :: Financial and Insurance Industry',
         'Intended Audience :: Legal Industry',
         'Intended Audience :: Manufacturing',
-        'License :: OSI Approved :: BSD License'
+        'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.6',

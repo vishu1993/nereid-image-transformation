@@ -7,7 +7,7 @@
 <tryton>
     <data>
         <record id="static_file_url" model="nereid.url_rule">
-            <field name="rule">/&lt;language&gt;/static-file-transform/&lt;int:active_id&gt;/&lt;path:commands&gt;.&lt;extension&gt;</field>
+            <field name="rule">/static-file-transform/&lt;int:active_id&gt;/&lt;path:commands&gt;.&lt;extension&gt;</field>
             <field name="endpoint">nereid.static.file.transform_static_file</field>
             <field name="sequence" eval="130" />
             <field name="http_method_get" eval="True"/>
