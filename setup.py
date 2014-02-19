@@ -98,7 +98,7 @@ minor_version = int(minor_version)
 module_name = 'nereid_image_transformation'
 
 requires = [
-    'pil',
+    'pillow',
 ]
 for dep in info.get('depends', []):
     if not re.match(r'(ir|res|webdav)(\W|$)', dep):
