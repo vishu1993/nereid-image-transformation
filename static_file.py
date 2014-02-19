@@ -10,7 +10,7 @@
 import os
 import tempfile
 
-import Image
+from PIL import Image
 from nereid.helpers import send_file
 from nereid import url_for
 from werkzeug.utils import secure_filename
