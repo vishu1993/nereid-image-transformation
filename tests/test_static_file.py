@@ -5,13 +5,17 @@
 
     Test the static file feature of nereid
 
-    :copyright: (c) 2013 by Openlabs Technologies & Consulting (P) LTD
+    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) LTD
     :license: BSD, see LICENSE for more details.
 """
-import new
+import os
+import time
 import unittest
-import functools
+import cStringIO
+from io import BytesIO
+from pytz import timezone
 from urllib import unquote
+from datetime import datetime
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
@@ -19,6 +23,7 @@ from trytond.transaction import Transaction
 from trytond.config import CONFIG
 from nereid.testing import NereidTestCase
 from nereid import render_template
+from PIL import Image
 
 CONFIG['smtp_server'] = 'smtpserver'
 CONFIG['smtp_user'] = 'test@xyz.com'
@@ -100,7 +105,6 @@ class TestStaticFile(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'locales': [('add', [locale.id])],
             'guest_user': self.guest_user,
         }])
         self.templates = {
@@ -137,31 +141,108 @@ class TestStaticFile(NereidTestCase):
 
             app = self.get_app()
             static_file_obj = self.static_file_obj
-            with app.test_client() as c:
-                # Patch the home page method
-                def home_func(self, file_id):
-                    return render_template(
-                        'home.jinja',
-                        static_file_obj=static_file_obj,
-                        static_file_id=file_id,
-                    )
-                home_func = functools.partial(home_func, file_id=file.id)
-                c.application.view_functions[
-                    'nereid.website.home'] = new.instancemethod(
-                        home_func, self.nereid_website_obj
-                )
-                self.nereid_website_obj.home = new.instancemethod(
-                    home_func, self.nereid_website_obj
-                )
-                rv = c.get('/en_US/')
 
+            with app.test_request_context('/'):
+                rv = render_template(
+                    'home.jinja',
+                    static_file_obj=static_file_obj,
+                    static_file_id=file.id,
+                )
                 self.assertTrue(
-                    '/en_US/static-file-transform/1/'
+                    '/static-file-transform/1/'
                     'thumbnail,w_120,h_120,m_n/'
                     'resize,w_100,h_100,m_n.png'
-                    in unquote(rv.data)
+                    in unquote(unicode(rv))
+                )
+
+    def test_0020_transform_static_file(self):
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
+            img_file = BytesIO()
+            img = Image.new("RGB", (100, 100), "white")
+            img.save(img_file, 'png')
+
+            img_file.seek(0)
+            file = self.create_static_file(buffer(img_file.read()))
+
+            self.assertFalse(file.url)
+
+            app = self.get_app()
+
+            with app.test_client() as c:
+                rv = c.get(
+                    '/static-file-transform/%d/thumbnail,w_120,h_120,m_n/'
+                    'resize,w_100,h_100,m_n.png' % file.id
                 )
                 self.assertEqual(rv.status_code, 200)
+                img = Image.open(cStringIO.StringIO(rv.data))
+                # Assert if white
+                self.assertEqual(img.getpixel((0, 0)), (255, 255, 255))
+
+            # Save temp image file datetime
+            temp_image_time = datetime.fromtimestamp(os.path.getmtime(
+                '/tmp/nereid/%s/%d/'
+                'thumbnailw_120h_120m_n_resizew_100h_100m_n.png' %
+                (DB_NAME, file.id)
+            ), timezone('UTC'))
+            Transaction().cursor.commit()  # Commit to retain file
+
+        time.sleep(1)
+
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            # Access file again
+            with app.test_client() as c:
+                rv = c.get(
+                    '/static-file-transform/%d/thumbnail,w_120,h_120,m_n/'
+                    'resize,w_100,h_100,m_n.png' % file.id
+                )
+                self.assertEqual(rv.status_code, 200)
+                img = Image.open(cStringIO.StringIO(rv.data))
+                # Assert if white
+                self.assertEqual(img.getpixel((0, 0)), (255, 255, 255))
+
+            # Assert if file is not modified.
+            self.assertEqual(
+                temp_image_time, datetime.fromtimestamp(os.path.getmtime(
+                    '/tmp/nereid/%s/%d/'
+                    'thumbnailw_120h_120m_n_resizew_100h_100m_n.png' %
+                    (DB_NAME, file.id)
+                ), timezone('UTC'))
+            )
+
+            # Generate new image
+            img_file = BytesIO()
+            img = Image.new("RGB", (100, 100), "black")
+            img.save(img_file, 'png')
+
+            img_file.seek(0)
+
+            # Update image in same file
+            file = self.static_file_obj(file.id)
+            file.file_binary = img_file.read()
+            file.save()
+
+            app = self.get_app()
+
+            with app.test_client() as c:
+                rv = c.get(
+                    '/static-file-transform/%d/thumbnail,w_120,h_120,m_n/'
+                    'resize,w_100,h_100,m_n.png' % file.id
+                )
+                self.assertEqual(rv.status_code, 200)
+                img = Image.open(cStringIO.StringIO(rv.data))
+                # Assert if black
+                self.assertEqual(img.getpixel((0, 0)), (0, 0, 0))
+
+            # Assert if image is updated
+            self.assertTrue(
+                temp_image_time < datetime.fromtimestamp(os.path.getmtime(
+                    '/tmp/nereid/%s/%d/'
+                    'thumbnailw_120h_120m_n_resizew_100h_100m_n.png' %
+                    (DB_NAME, file.id)
+                ), timezone('UTC'))
+            )
 
 
 def suite():
