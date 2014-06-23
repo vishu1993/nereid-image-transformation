@@ -4,13 +4,15 @@
 
     Static File
 
-    :copyright: (c) 2013 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
 import os
-import tempfile
+from io import BytesIO
+from datetime import datetime
 
 from PIL import Image
+import pytz
 from nereid.helpers import send_file
 from nereid import url_for
 from werkzeug.utils import secure_filename
@@ -195,10 +197,7 @@ class NereidStaticFile:
         :param filename: The file to which the transformed image
                          needs to be written
         """
-        fp = tempfile.SpooledTemporaryFile(suffix=self.name)
-        fp.write(self.file_binary)
-        fp.seek(0)
-        image_file = Image.open(fp)
+        image_file = Image.open(BytesIO(self.file_binary))
 
         parse_command = TransformationCommand.parse_command
 
@@ -223,11 +222,15 @@ class NereidStaticFile:
             os.makedirs(tmp_folder)
 
         filename = os.path.join(
-            tmp_folder,
-            '%s.%s' % (secure_filename(commands), extension)
+            tmp_folder, '%s.%s' % (secure_filename(commands), extension)
+        )
+        file_date = os.path.exists(filename) and datetime.fromtimestamp(
+            os.path.getmtime(filename), pytz.timezone('UTC')
         )
 
-        if not os.path.exists(filename):
+        if not file_date or (
+            self.write_date and file_date < pytz.UTC.localize(self.write_date)
+        ):
             self._transform_static_file(commands, extension, filename)
 
         rv = send_file(filename)

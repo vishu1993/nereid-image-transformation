@@ -115,8 +115,8 @@ setup(
     long_description=open('README.rst').read(),
     author="Openlabs Technologies and Consulting (P) Ltd.",
     url="http://openlabs.co.in",
-    download_url=
-        "https://github.com/openlabs/trytond-nereid-image-transformation",
+    download_url="https://github.com/openlabs/"
+        "trytond-nereid-image-transformation",
     package_dir={'trytond.modules.%s' % module_name: '.'},
     packages=[
         'trytond.modules.%s' % module_name,
