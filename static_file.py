@@ -197,7 +197,8 @@ class NereidStaticFile:
         :param filename: The file to which the transformed image
                          needs to be written
         """
-        image_file = Image.open(BytesIO(self.file_binary))
+        # Ugly hack '[:]' to fix issue in python 2.7.3
+        image_file = Image.open(BytesIO(self.file_binary[:]))
 
         parse_command = TransformationCommand.parse_command
 
