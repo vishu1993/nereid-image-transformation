@@ -4,6 +4,12 @@ Nereid Image Transformation Module
 This module works as a dynamic image resizing addon for the statifc file
 functionality in Nereid.
 
+.. image:: https://travis-ci.org/openlabs/nereid-image-transformation.png?branch=develop
+  :target: https://travis-ci.org/openlabs/nereid-image-transformation
+
+.. image:: https://coveralls.io/repos/openlabs/nereid-image-transformation/badge.png
+  :target: https://coveralls.io/r/openlabs/nereid-image-transformation
+
 How to use
 ----------
 

@@ -1,0 +1,5 @@
+[run]
+source = trytond.modules.nereid_image_transformation
+
+[report]
+omit = */tests/*, */fabfile.py
