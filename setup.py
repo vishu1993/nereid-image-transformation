@@ -3,9 +3,12 @@
 """
     setup
 
-    :copyright: (c) 2013 by Openlabs Technologies & Consulting (P) Limited
+    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) Limited
     :license: BSD, see LICENSE for more details.
 """
+import os
+import sys
+import unittest
 from setuptools import setup, Command
 import re
 import ConfigParser
@@ -85,6 +88,34 @@ class RunAudit(Command):
             print "No problems found in sourcecode."
             sys.exit(0)
 
+
+class SQLiteTest(Command):
+    """
+    Run the tests on SQLite
+    """
+    description = "Run tests on SQLite"
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from trytond.config import CONFIG
+        CONFIG['db_type'] = 'sqlite'
+        os.environ['DB_NAME'] = ':memory:'
+
+        from tests import suite
+        test_result = unittest.TextTestRunner(verbosity=3).run(suite())
+
+        if test_result.wasSuccessful():
+            sys.exit(0)
+        sys.exit(-1)
+
+
 config = ConfigParser.ConfigParser()
 config.readfp(open('tryton.cfg'))
 info = dict(config.items('tryton'))
@@ -150,6 +181,7 @@ setup(
     cmdclass={
         'xmltests': XMLTests,
         'audit': RunAudit,
+        'test': SQLiteTest,
     },
     test_loader='trytond.test_loader:Loader',
 )
