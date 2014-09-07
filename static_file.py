@@ -225,8 +225,15 @@ class NereidStaticFile:
         tmp_folder = os.path.join(
             '/tmp/nereid/', Transaction().cursor.dbname, str(self.id)
         )
-        if not os.path.exists(tmp_folder):
+
+        try:
             os.makedirs(tmp_folder)
+        except OSError, err:
+            if err.errno == 17:
+                # directory exists
+                pass
+            else:
+                raise
 
         filename = os.path.join(
             tmp_folder, '%s.%s' % (secure_filename(commands), extension)
