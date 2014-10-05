@@ -14,7 +14,7 @@ from datetime import datetime
 from PIL import Image
 import pytz
 from nereid.helpers import send_file
-from nereid import url_for
+from nereid import url_for, route
 from werkzeug.utils import secure_filename
 
 from trytond.pool import PoolMeta
@@ -143,14 +143,19 @@ class StaticFileTransformationCommand(TransformationCommand):
     def __html__(self):
         return self.url()
 
-    def url(self):
+    def url(self, **kwargs):
         """
         Constructs a URL based on the static file and the commands
+
+        .. versionchanged::3.2.0.2
+
+            Supports keyword arguments passed to the url builder
+
         """
         return url_for(
             'nereid.static.file.transform_static_file',
             active_id=int(self.static_file), commands=unicode(self),
-            extension=self.extension,
+            extension=self.extension, **kwargs
         )
 
 
@@ -209,6 +214,7 @@ class NereidStaticFile:
 
         image_file.save(filename)
 
+    @route('/static-file-transform/<int:active_id>/<path:commands>.<extension>')
     def transform_static_file(self, commands, extension):
         """
         Transform the static file and send the transformed file

@@ -105,7 +105,6 @@ class TestStaticFile(NereidTestCase):
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
-            'guest_user': self.guest_user,
         }])
         self.templates = {
             'home.jinja':
