@@ -14,7 +14,7 @@ from datetime import datetime
 from PIL import Image
 import pytz
 from nereid.helpers import send_file
-from nereid import url_for
+from nereid import url_for, abort
 from werkzeug.utils import secure_filename
 
 from trytond.pool import PoolMeta
