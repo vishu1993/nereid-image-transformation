@@ -10,11 +10,13 @@
 import os
 from io import BytesIO
 from datetime import datetime
+from urllib2 import unquote
 
 from PIL import Image
 import pytz
 from nereid.helpers import send_file
-from nereid import url_for, route
+from nereid import url_for, route, abort
+from jinja2 import Markup
 from werkzeug.utils import secure_filename
 
 from trytond.pool import PoolMeta
@@ -118,7 +120,13 @@ class TransformationCommand(object):
         :param command: A special command to be parsed
         :return: A tuple of the operation to be done and parameters for it
         """
-        operation, params = command.split(',', 1)
+        command = unquote(unicode(command))
+
+        try:
+            operation, params = command.split(',', 1)
+        except ValueError:
+            abort(404)
+
         return operation, dict(
             map(lambda arg: arg.split('_'), params.split(','))
         )
@@ -141,7 +149,7 @@ class StaticFileTransformationCommand(TransformationCommand):
         super(StaticFileTransformationCommand, self).__init__(commands)
 
     def __html__(self):
-        return self.url()
+        return Markup(self.url())
 
     def url(self, **kwargs):
         """
