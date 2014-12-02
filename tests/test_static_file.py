@@ -23,6 +23,7 @@ from trytond.transaction import Transaction
 from trytond.config import CONFIG
 from nereid.testing import NereidTestCase
 from nereid import render_template
+from jinja2 import Markup
 from PIL import Image
 
 CONFIG['smtp_server'] = 'smtpserver'
@@ -53,6 +54,20 @@ class TestStaticFile(NereidTestCase):
         self.static_file_obj = POOL.get('nereid.static.file')
         self.static_folder_obj = POOL.get('nereid.static.folder')
         self.nereid_website_locale_obj = POOL.get('nereid.website.locale')
+
+    def tearDown(self):
+        self.delete_test_directory('/tmp/nereid')
+        self.delete_test_directory(CONFIG.options['data_path'])
+
+    def delete_test_directory(self, dirname):
+        """
+        Deletes the contents of the directory identified by data path.
+        """
+        for root, dirs, files in os.walk(dirname, topdown=False):
+            for name in files:
+                os.remove(os.path.join(root, name))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
 
     def setup_defaults(self):
         """
@@ -93,11 +108,10 @@ class TestStaticFile(NereidTestCase):
 
         url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
-        currency, = self.currency_obj.search([('code', '=', 'USD')])
         locale, = self.nereid_website_locale_obj.create([{
             'code': 'en_US',
             'language': en_us,
-            'currency': currency,
+            'currency': usd,
         }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
@@ -112,7 +126,7 @@ class TestStaticFile(NereidTestCase):
                 {% set static_file = static_file_obj(static_file_id) %}
                 {{ static_file.transform_command().thumbnail(120, 120).resize(
                     100, 100) }}
-                ''',
+                '''
         }
 
     def create_static_file(self, file_buffer):
@@ -154,7 +168,62 @@ class TestStaticFile(NereidTestCase):
                     in unquote(unicode(rv))
                 )
 
-    def test_0020_transform_static_file(self):
+    def test_0015_markup_test(self):
+        """
+        Tests that Markup wraps the URL.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+
+            file_buffer = buffer('test-content2')
+            file = self.create_static_file(file_buffer)
+            self.assertFalse(file.url)
+
+            app = self.get_app()
+            static_file_command = file.transform_command()
+
+            with app.test_request_context('/'):
+                self.assertTrue(isinstance(
+                    static_file_command.__html__(),
+                    Markup)
+                )
+
+    def test_0020_quoted_url(self):
+        """
+        Test that quoted urls work properly.
+        """
+        with Transaction().start(DB_NAME, USER, CONTEXT):
+            self.setup_defaults()
+            app = self.get_app()
+
+            img_file = BytesIO()
+            img = Image.new("RGB", (100, 100), "black")
+            img.save(img_file, 'png')
+
+            img_file.seek(0)
+            file = self.create_static_file(buffer(img_file.read()))
+
+            self.assertFalse(file.url)
+
+            with app.test_client() as c:
+                rv = c.get(
+                    '/static-file-transform/{0}/thumbnail'
+                    '%2Cw_300%2Ch_300%2Cm_a.png'.format(file.id)
+                )
+                self.assertEqual(rv.status_code, 200)
+                img = Image.open(cStringIO.StringIO(rv.data))
+                # Assert if white
+                self.assertEqual(img.getpixel((0, 0)), (0, 0, 0))
+
+                # Improper URL won't work
+                rv = c.get(
+                    '/static-file-transform/{0}/'
+                    'thumbnail%25252Cw_300%25252Ch_300%25252Cm_a.png'.
+                    format(file.id)
+                )
+                self.assertTrue(rv.status_code, 404)
+
+    def test_0030_transform_static_file(self):
         with Transaction().start(DB_NAME, USER, CONTEXT):
             self.setup_defaults()
 
