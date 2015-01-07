@@ -5,7 +5,7 @@
 
     Test the static file feature of nereid
 
-    :copyright: (c) 2013-2014 by Openlabs Technologies & Consulting (P) LTD
+    :copyright: (c) 2013-2015 by Openlabs Technologies & Consulting (P) LTD
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -20,19 +20,14 @@ from datetime import datetime
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
-from trytond.config import CONFIG
+from trytond.config import config
 from nereid.testing import NereidTestCase
 from nereid import render_template
 from jinja2 import Markup
 from PIL import Image
 
-CONFIG['smtp_server'] = 'smtpserver'
-CONFIG['smtp_user'] = 'test@xyz.com'
-CONFIG['smtp_password'] = 'testpassword'
-CONFIG['smtp_port'] = 587
-CONFIG['smtp_tls'] = True
-CONFIG['smtp_from'] = 'from@xyz.com'
-CONFIG.options['data_path'] = '/tmp/temp_tryton_data/'
+config.set('email', 'from', 'from@xyz.com')
+config.set('database', 'path', '/tmp/temp_tryton_data/')
 
 
 class TestStaticFile(NereidTestCase):
@@ -42,7 +37,6 @@ class TestStaticFile(NereidTestCase):
 
         self.nereid_website_obj = POOL.get('nereid.website')
         self.nereid_user_obj = POOL.get('nereid.user')
-        self.url_map_obj = POOL.get('nereid.url_map')
         self.company_obj = POOL.get('company.company')
         self.currency_obj = POOL.get('currency.currency')
         self.language_obj = POOL.get('ir.lang')
@@ -57,7 +51,7 @@ class TestStaticFile(NereidTestCase):
 
     def tearDown(self):
         self.delete_test_directory('/tmp/nereid')
-        self.delete_test_directory(CONFIG.options['data_path'])
+        self.delete_test_directory(config.get('database', 'path'))
 
     def delete_test_directory(self, dirname):
         """
@@ -106,7 +100,6 @@ class TestStaticFile(NereidTestCase):
             'company': self.company.id,
         }])
 
-        url_map_id, = self.url_map_obj.search([], limit=1)
         en_us, = self.language_obj.search([('code', '=', 'en_US')])
         locale, = self.nereid_website_locale_obj.create([{
             'code': 'en_US',
@@ -115,7 +108,6 @@ class TestStaticFile(NereidTestCase):
         }])
         self.nereid_website_obj.create([{
             'name': 'localhost',
-            'url_map': url_map_id,
             'company': self.company,
             'application_user': USER,
             'default_locale': locale,
