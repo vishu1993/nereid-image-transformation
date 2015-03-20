@@ -50,3 +50,16 @@ Using the above in a template should result in the following URL:
 ::
 
     /en_US/static-file-transform/1/thumbnail,w_120,h_120,m_n/resize,w_100,h_100,m_n.png
+
+Authors and Contributors
+------------------------
+
+This module was built at `Openlabs <http://www.openlabs.co.in>`_. 
+
+Professional Support
+--------------------
+
+This module is professionally supported by `Openlabs <http://www.openlabs.co.in>`_.
+If you are looking for on-site teaching or consulting support, contact our
+`sales <mailto:sales@openlabs.co.in>`_ and `support
+<mailto:support@openlabs.co.in>`_ teams.
